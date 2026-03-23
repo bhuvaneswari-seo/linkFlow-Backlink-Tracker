@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>linkFlow — Backlink Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Dark palette */
+  --bg:#0e1117;
+  --bg2:#141920;
+  --surface:#1a2130;
+  --surface2:#1f2840;
+  --surface3:#243050;
+  --border:#ffffff0f;
+  --border2:#ffffff18;
+  --border3:#ffffff24;
+
+  /* Text */
+  --tx:#f1f5f9;
+  --tx2:#94a3b8;
+  --tx3:#64748b;
+
+  /* Accent — confident blue-teal */
+  --accent:#3ecfcf;
+  --accent-dim:#3ecfcf22;
+  --accent-hover:#2ebdbd;
+  --accent-text:#0e1117;
+
+  /* Semantic */
+  --green:#34d399;
+  --green-bg:#34d39918;
+  --green-border:#34d39930;
+  --red:#f87171;
+  --red-bg:#f8717118;
+  --red-border:#f8717130;
+  --amber:#fbbf24;
+  --amber-bg:#fbbf2418;
+  --amber-border:#fbbf2430;
+  --purple:#a78bfa;
+  --purple-bg:#a78bfa18;
+  --teal:#2dd4bf;
+  --teal-bg:#2dd4bf18;
+
+  /* Legacy aliases (keep chart colors working) */
+  --white:#1a2130;
+  --gray-50:#141920;
+  --gray-100:#1a2130;
+  --gray-200:#ffffff0f;
+  --gray-300:#ffffff18;
+  --gray-400:#64748b;
+  --gray-500:#94a3b8;
+  --gray-600:#94a3b8;
+  --gray-700:#cbd5e1;
+  --gray-800:#e2e8f0;
+  --gray-900:#f1f5f9;
+  --blue-50:#3ecfcf18;
+  --blue-100:#3ecfcf28;
+  --blue-500:#3ecfcf;
+  --blue-600:#3ecfcf;
+  --blue-700:#2ebdbd;
+  --green-50:#34d39918;
+  --green-100:#34d39928;
+  --green-600:#34d399;
+  --green-700:#2ec48e;
+  --red-50:#f8717118;
+  --red-100:#f8717128;
+  --red-600:#f87171;
+  --amber-50:#fbbf2418;
+  --amber-100:#fbbf2428;
+  --amber-600:#fbbf24;
+  --teal-500:#2dd4bf;
+  --purple-500:#a78bfa;
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+  --shadow-md:0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg:0 10px 30px rgba(0,0,0,.5);
+  --radius-sm:6px;
+  --radius:8px;
+  --radius-md:10px;
+  --radius-lg:12px;
+  --radius-xl:16px;
+}
+html{font-size:14px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── NAV ─────────────────────────────────────────────────────── */
+.nav{background:var(--bg2);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:40}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:8px}
+.nav-logo{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.nav-logo svg{width:16px;height:16px;stroke:var(--accent-text);fill:none;stroke-width:2.5}
+.nav-name{font-size:16px;font-weight:700;color:var(--gray-900);letter-spacing:-.4px}
+.nav-name span{color:var(--accent)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);display:flex;align-items:center;gap:5px}
+.nav-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-export{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--tx2);cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:var(--shadow-sm)}
+.nav-export:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.nav-export svg{width:13px;height:13px;flex-shrink:0}
+
+/* ── HERO ─────────────────────────────────────────────────────── */
+.hero{background:var(--bg2);border-bottom:1px solid var(--border2);padding:2rem 1.5rem}
+.hero-inner{max-width:1200px;margin:0 auto}
+.hero h1{font-size:26px;font-weight:700;color:var(--tx);letter-spacing:-.5px;margin-bottom:4px}
+.hero p{font-size:14px;color:var(--tx2)}
+
+/* ── MAIN ─────────────────────────────────────────────────────── */
+.main{max-width:1200px;margin:0 auto;padding:1.5rem}
+
+/* ── TABS ─────────────────────────────────────────────────────── */
+.tab-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:4px;display:inline-flex;gap:2px;margin-bottom:1.5rem;box-shadow:var(--shadow-sm)}
+.tab{font-size:13px;font-weight:500;padding:7px 16px;border-radius:var(--radius);color:var(--gray-500);border:none;background:transparent;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--gray-800)}
+.tab.on{background:var(--accent);color:var(--accent-text);box-shadow:var(--shadow-sm)}
+.panel{display:none}.panel.on{display:block}
+
+/* ── ALERT BAR ────────────────────────────────────────────────── */
+.alert-bar{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.alert-bar p{font-size:12px;color:var(--red);display:flex;align-items:center;gap:6px}
+.alert-bar p::before{content:'';width:16px;height:16px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red);flex-shrink:0;display:inline-block}
+.alert-bar button{font-size:11px;font-weight:500;padding:5px 12px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--red-border);color:var(--red);cursor:pointer;font-family:inherit;transition:all .15s}
+.alert-bar button:hover{background:var(--red-bg)}
+
+/* ── IMPORT BAR ───────────────────────────────────────────────── */
+.imp-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.imp-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:7px 13px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--tx2);cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:var(--shadow-sm)}
+.imp-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.imp-btn svg{width:13px;height:13px;flex-shrink:0}
+.imp-btn.ah{border-color:#ff6b0033;color:#e86200}
+.imp-btn.ah:hover{background:#fff7f0;border-color:#e86200}
+.imp-btn.se{border-color:#ff980033;color:#b36b00}
+.imp-btn.se:hover{background:#fffaf0;border-color:#b36b00}
+.imp-panel{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;display:none;box-shadow:var(--shadow-sm)}
+.imp-panel.open{display:block}
+.imp-panel h4{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:6px}
+.imp-panel p{font-size:12px;color:var(--tx2);margin-bottom:10px;line-height:1.6}
+.imp-panel ol{font-size:12px;color:var(--tx2);margin-left:1.2rem;line-height:2}
+.imp-panel ol b{color:var(--tx)}
+.imp-drop{border:2px dashed var(--border2);border-radius:var(--radius-md);padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-top:12px;background:var(--bg)}
+.imp-drop:hover,.imp-drop.drag{border-color:var(--accent);background:var(--accent-dim)}
+.imp-drop svg{width:28px;height:28px;stroke:var(--tx3);margin-bottom:8px}
+.imp-drop p{font-size:13px;color:var(--tx2);font-weight:500}
+.imp-drop span{font-size:11px;color:var(--tx3);display:block;margin-top:3px}
+.imp-drop input{display:none}
+.imp-result{margin-top:10px;font-size:12px;padding:10px 14px;border-radius:var(--radius);display:none;font-weight:500}
+.imp-result.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);display:block}
+.imp-result.er{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);display:block}
+
+/* ── ADD BUTTON ───────────────────────────────────────────────── */
+.add-btn{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:9px 18px;border-radius:var(--radius-md);background:var(--accent);color:var(--accent-text);border:none;cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:var(--shadow-sm);margin-bottom:14px}
+.add-btn:hover{background:var(--accent-hover);box-shadow:var(--shadow-md)}
+.add-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+/* ── FILTERS ──────────────────────────────────────────────────── */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-row select,.filter-row input[type=text]{font-size:12px;padding:7px 11px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--tx);font-family:inherit;outline:none;transition:all .15s;box-shadow:var(--shadow-sm)}
+.filter-row select:focus,.filter-row input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(62,207,207,.12)}
+.filter-row input[type=text]{width:200px}
+.filter-row input[type=text]::placeholder{color:var(--tx3)}
+
+/* ── TABLE ────────────────────────────────────────────────────── */
+.tw{overflow-x:auto;border-radius:var(--radius-lg);border:1px solid var(--border2);background:var(--surface);box-shadow:var(--shadow-sm)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);padding:11px 14px;text-align:left;background:var(--bg2);border-bottom:1px solid var(--border2);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--tx2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+tbody tr.overdue td{background:rgba(248,113,113,.05)}
+tbody tr.overdue:hover td{background:rgba(248,113,113,.09)}
+
+/* ── BADGES ───────────────────────────────────────────────────── */
+.sb{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.sb::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.sb.lv{background:var(--green-50);color:var(--green-600);border:1px solid var(--green-100)}
+.sb.ls{background:var(--red-50);color:var(--red-600);border:1px solid var(--red-100)}
+.sb.ck{background:var(--amber-50);color:var(--amber-600);border:1px solid var(--amber-100)}
+.overdue-tag{font-size:10px;color:var(--red-600);font-weight:600;margin-left:4px;background:var(--red-50);padding:1px 5px;border-radius:4px}
+
+/* ── TABLE ACTION BUTTONS ─────────────────────────────────────── */
+.tbtn{font-size:11px;font-weight:500;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--tx2);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.tbtn:hover{background:var(--surface3);border-color:var(--border3);color:var(--tx)}
+.tbtn.vf{color:var(--accent);border-color:rgba(62,207,207,.25);background:rgba(62,207,207,.08)}
+.tbtn.vf:hover{background:rgba(62,207,207,.15);border-color:var(--accent)}
+.tbtn.dl:hover{color:var(--red);border-color:var(--red-border);background:var(--red-bg)}
+
+/* ── KPI CARDS ────────────────────────────────────────────────── */
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:1.5rem}
+.kc{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow-sm);transition:box-shadow .2s}
+.kc:hover{box-shadow:var(--shadow-md)}
+.kc .ki{width:36px;height:36px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.kc .ki svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.kc .kl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:5px}
+.kc .kv{font-size:28px;font-weight:700;letter-spacing:-1px;color:var(--tx)}
+.kc .ks{font-size:11px;color:var(--tx3);margin-top:3px}
+.kc.b .ki{background:rgba(62,207,207,.12);color:var(--accent)}
+.kc.g .ki{background:var(--green-bg);color:var(--green)}
+.kc.r .ki{background:var(--red-bg);color:var(--red)}
+.kc.a .ki{background:var(--amber-bg);color:var(--amber)}
+.kc.t .ki{background:var(--teal-bg);color:var(--teal)}
+.kc.p .ki{background:var(--purple-bg);color:var(--purple)}
+
+/* ── CHART CARDS ──────────────────────────────────────────────── */
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:640px){.r2{grid-template-columns:1fr}}
+.cc{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.cc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cc h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3)}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── MONTHLY CARDS ────────────────────────────────────────────── */
+.mcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-bottom:1.25rem}
+.mc{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-sm)}
+.mc .ml{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);margin-bottom:6px}
+.mc .mv{font-size:24px;font-weight:700;color:var(--tx);letter-spacing:-.5px}
+.mc .mn{font-size:11px;font-weight:600;margin-top:5px}
+
+/* ── RECOVERY CARDS ───────────────────────────────────────────── */
+.rc{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.rc-d{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.rc-m{font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.6}
+.ras{display:flex;gap:6px;flex-wrap:wrap}
+.ra{font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;background:var(--surface2);border:1px solid var(--border2);color:var(--tx2);cursor:pointer;font-family:inherit;transition:all .15s}
+.ra:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.ra.sl{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.rs{font-size:11px;margin-top:10px;color:var(--tx3)}
+.rs.dn{color:var(--green);font-weight:500}
+
+/* ── HEALTH BARS ──────────────────────────────────────────────── */
+.hr{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--gray-100)}
+.hr:last-child{border-bottom:none}
+.hd{font-size:12px;font-weight:600;color:var(--tx);width:180px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ht{flex:1;height:6px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.hf{height:100%;border-radius:4px;transition:width .4s}
+.hv{font-size:12px;font-weight:700;width:32px;text-align:right;flex-shrink:0}
+.hl{font-size:11px;font-weight:500;width:60px;text-align:right;flex-shrink:0;color:var(--tx3)}
+
+/* ── MODAL ────────────────────────────────────────────────────── */
+.ov-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;backdrop-filter:blur(2px)}
+.ov-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-xl);padding:28px;width:100%;max-width:580px;margin:auto;box-shadow:var(--shadow-lg)}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.mh h2{font-size:17px;font-weight:700;color:var(--tx)}
+.mx{background:none;border:none;color:var(--tx3);font-size:20px;cursor:pointer;padding:3px 7px;border-radius:var(--radius-sm);line-height:1;transition:all .15s}
+.mx:hover{color:var(--tx);background:var(--surface2)}
+.form-section{margin-bottom:18px}
+.form-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.fg2{grid-template-columns:1fr}}
+.fg{display:flex;flex-direction:column;gap:5px}.fg.fu{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select{font-size:13px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg2);color:var(--tx);font-family:inherit;outline:none;transition:all .15s}
+.fg input:focus,.fg select:focus{border-color:var(--accent);background:var(--bg);box-shadow:0 0 0 3px rgba(62,207,207,.12)}
+.fg input::placeholder{color:var(--tx3)}
+.fa{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.bcl{font-size:13px;font-weight:500;padding:9px 18px;border-radius:var(--radius-md);background:transparent;border:1px solid var(--border2);color:var(--tx2);cursor:pointer;font-family:inherit;transition:all .15s}
+.bcl:hover{background:var(--surface2);border-color:var(--border3)}
+.bsv{font-size:13px;font-weight:600;padding:9px 22px;border-radius:var(--radius-md);background:var(--accent);color:var(--accent-text);border:none;cursor:pointer;font-family:inherit;transition:all .15s;box-shadow:var(--shadow-sm)}
+.bsv:hover{background:var(--accent-hover);box-shadow:var(--shadow-md)}
+
+/* ── HOW TO USE ───────────────────────────────────────────────── */
+.info-box{background:rgba(62,207,207,.07);border:1px solid rgba(62,207,207,.2);border-radius:var(--radius-md);padding:14px 16px;font-size:12px;color:var(--accent);line-height:1.6;margin-bottom:1.25rem}
+.info-box b{font-weight:600}
+.gs{margin-bottom:1.5rem}
+.gs h4{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:.75rem;padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.gs p{font-size:12px;color:var(--tx2);line-height:1.7}
+.gr{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.gr:last-child{border-bottom:none}
+.gk{font-weight:600;min-width:140px;flex-shrink:0;color:var(--tx3)}
+.gv{color:var(--tx2);line-height:1.6}
+.st{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.sn{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-text);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sv{font-size:12px;color:var(--tx2);line-height:1.6}
+.sv b{font-weight:600;color:var(--tx)}
+.guide-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+
+/* ── EMPTY STATE ──────────────────────────────────────────────── */
+.es{text-align:center;padding:3rem 1rem;color:var(--gray-400)}
+.es svg{width:40px;height:40px;stroke:var(--tx3);margin-bottom:12px;fill:none;stroke-width:1.5}
+.es p{font-size:13px}
+
+/* ── TOAST ────────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface3);color:var(--tx);border:1px solid var(--border3);border-radius:var(--radius-md);padding:11px 18px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .22s;pointer-events:none;box-shadow:var(--shadow-lg)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ───────────────────────────────────────────────── */
+@media(max-width:768px){
+  .nav-inner{padding:0 1rem}
+  .hero{padding:1.5rem 1rem}
+  .hero h1{font-size:22px}
+  .main{padding:1rem}
+  .tab-wrap{width:100%;overflow-x:auto}
+  .kg{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .kg{grid-template-columns:1fr 1fr}
+  .tab-wrap{flex-wrap:nowrap}
+}
+
+/* ── SECTION DIVIDER ──────────────────────────────────────────── */
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);margin-bottom:12px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div class="ov-bg" id="modal">
+<div class="modal">
+  <div class="mh">
+    <h2 id="mt">Add new link</h2>
+    <button class="mx" onclick="cM()">&#10005;</button>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">Link details</div>
+    <div class="fg2">
+      <div class="fg fu"><label>Linking domain *</label><input id="fd" placeholder="e.g. ahrefs.com"/></div>
+      <div class="fg fu"><label>Anchor text *</label><input id="fa" placeholder="e.g. best link building tools"/></div>
+      <div class="fg fu"><label>Page containing the link</label><input id="fp" placeholder="e.g. ahrefs.com/blog/seo-tools"/></div>
+      <div class="fg fu"><label>Your target URL</label><input id="ftg" placeholder="e.g. yourdomain.com/guide"/></div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">Classification</div>
+    <div class="fg2">
+      <div class="fg"><label>Link type *</label>
+        <select id="fty"><option value="">Select type...</option><option>Guest Post</option><option>Resource Page</option><option>Broken Link</option><option>Niche Edit</option><option>Digital PR</option><option>Citation</option></select>
+      </div>
+      <div class="fg"><label>Status *</label>
+        <select id="fst" onchange="tL()"><option value="">Select status...</option><option>Live</option><option>Lost</option><option>Check</option></select>
+      </div>
+      <div class="fg"><label>Dofollow?</label>
+        <select id="fdf"><option value="">Select...</option><option>Yes</option><option>No</option><option>TBD</option></select>
+      </div>
+      <div class="fg"><label>Month (reporting)</label>
+        <select id="fmo"><option value="">Select month...</option><option>Jan 2025</option><option>Feb 2025</option><option>Mar 2025</option><option>Apr 2025</option><option>May 2025</option><option>Jun 2025</option><option>Jul 2025</option><option>Aug 2025</option><option>Sep 2025</option><option>Oct 2025</option><option>Nov 2025</option><option>Dec 2025</option><option>Jan 2026</option><option>Feb 2026</option><option>Mar 2026</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="form-section-title">Metrics</div>
+    <div class="fg2">
+      <div class="fg"><label>Domain Rating (DR)</label><input id="fdr" type="number" min="0" max="100" placeholder="0 – 100"/></div>
+      <div class="fg"><label>Traffic estimate</label><input id="ftr" placeholder="e.g. 150K or 2.1M"/></div>
+      <div class="fg"><label>Date live</label><input id="fdt" type="date"/></div>
+      <div class="fg"><label>Notes</label><input id="fn" placeholder="Any extra context..."/></div>
+    </div>
+  </div>
+  <div id="lost-section" style="display:none">
+    <div class="form-section">
+      <div class="form-section-title">Lost link details</div>
+      <div class="fg2">
+        <div class="fg" id="gld"><label>Lost date</label><input id="fld" type="date"/></div>
+        <div class="fg fu" id="glr"><label>Lost reason</label><input id="flr" placeholder="e.g. Page removed, Link stripped, Site redesign..."/></div>
+      </div>
+    </div>
+  </div>
+  <div class="fa">
+    <button class="bcl" onclick="cM()">Cancel</button>
+    <button class="bsv" onclick="sL()">Save link</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="tk"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="nav-logo">
+        <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <span class="nav-name">link<span>Flow</span></span>
+    </div>
+    <div class="nav-right">
+      <div class="nav-badge" id="bc">0 links</div>
+      <button class="nav-export" onclick="exportCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Backlink Tracker</h1>
+    <p>Track backlinks. Measure impact. Stay in control.</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="tab-wrap">
+    <button class="tab on" onclick="sw('tr',this)">Link tracker</button>
+    <button class="tab" onclick="sw('ov',this)">Overview</button>
+    <button class="tab" onclick="sw('mo',this)">Monthly</button>
+    <button class="tab" onclick="sw('re',this)">Lost &amp; recovery</button>
+    <button class="tab" onclick="sw('he',this)">DR health</button>
+    <button class="tab" onclick="sw('gu',this)">How to use</button>
+  </div>
+
+  <!-- LINK TRACKER -->
+  <div id="tr" class="panel on">
+    <div id="alert-wrap"></div>
+    <div class="imp-bar">
+      <button class="imp-btn ah" onclick="toggleImp('ah')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import from Ahrefs
+      </button>
+      <button class="imp-btn se" onclick="toggleImp('se')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import from Semrush
+      </button>
+    </div>
+    <div class="imp-panel" id="imp-ah">
+      <h4>Import from Ahrefs</h4>
+      <p>Export your backlinks from Ahrefs and drop the CSV here. Domain, anchor text, page URL, DR, and dofollow will be filled automatically.</p>
+      <ol>
+        <li>Open <b>Ahrefs Site Explorer</b> → <b>Backlinks</b></li>
+        <li>Apply filters if needed (e.g. dofollow only, live links)</li>
+        <li>Click <b>Export</b> → <b>CSV</b></li>
+        <li>Drop the file below</li>
+      </ol>
+      <div class="imp-drop" id="drop-ah" onclick="document.getElementById('file-ah').click()" ondragover="dragOver(event,'drop-ah')" ondragleave="dragLeave('drop-ah')" ondrop="dropFile(event,'ah')">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>Drop CSV here or click to browse</p>
+        <span>Supports Ahrefs backlinks export (.csv)</span>
+        <input type="file" id="file-ah" accept=".csv" onchange="readFile(this,'ah')"/>
+      </div>
+      <div class="imp-result" id="res-ah"></div>
+    </div>
+    <div class="imp-panel" id="imp-se">
+      <h4>Import from Semrush</h4>
+      <p>Export your backlinks from Semrush and drop the CSV here. Domain, anchor text, page URL, and dofollow will be filled automatically.</p>
+      <ol>
+        <li>Open <b>Semrush Backlink Analytics</b> → <b>Backlinks</b></li>
+        <li>Apply filters if needed</li>
+        <li>Click <b>Export</b> → <b>CSV</b></li>
+        <li>Drop the file below</li>
+      </ol>
+      <div class="imp-drop" id="drop-se" onclick="document.getElementById('file-se').click()" ondragover="dragOver(event,'drop-se')" ondragleave="dragLeave('drop-se')" ondrop="dropFile(event,'se')">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>Drop CSV here or click to browse</p>
+        <span>Supports Semrush backlinks export (.csv)</span>
+        <input type="file" id="file-se" accept=".csv" onchange="readFile(this,'se')"/>
+      </div>
+      <div class="imp-result" id="res-se"></div>
+    </div>
+    <button class="add-btn" onclick="oM(null)">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add new link
+    </button>
+    <div class="filter-row">
+      <select id="fs" onchange="rT()"><option value="">All statuses</option><option>Live</option><option>Lost</option><option>Check</option></select>
+      <select id="fty2" onchange="rT()"><option value="">All types</option><option>Guest Post</option><option>Resource Page</option><option>Broken Link</option><option>Niche Edit</option><option>Digital PR</option><option>Citation</option></select>
+      <select id="fdf2" onchange="rT()"><option value="">Dofollow?</option><option>Yes</option><option>No</option></select>
+      <input type="text" id="fq" placeholder="Search domain or anchor..." oninput="rT()"/>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Domain</th><th>Anchor text</th><th>Type</th><th>DR</th><th>Dofollow</th><th>Last checked</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="ov" class="panel">
+    <div class="kg">
+      <div class="kc b">
+        <div class="ki"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+        <div class="kl">Total built</div><div class="kv" id="k0">0</div><div class="ks">all time</div>
+      </div>
+      <div class="kc g">
+        <div class="ki"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="kl">Live</div><div class="kv" id="k1">0</div><div class="ks">currently active</div>
+      </div>
+      <div class="kc r">
+        <div class="ki"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="kl">Lost</div><div class="kv" id="k2">0</div><div class="ks">need recovery</div>
+      </div>
+      <div class="kc a">
+        <div class="ki"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="kl">To check</div><div class="kv" id="k3">0</div><div class="ks">verify manually</div>
+      </div>
+      <div class="kc t">
+        <div class="ki"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="kl">Retention</div><div class="kv" id="k4">--</div><div class="ks">live / total</div>
+      </div>
+      <div class="kc p">
+        <div class="ki"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+        <div class="kl">Avg DR</div><div class="kv" id="k5">--</div><div class="ks">live links only</div>
+      </div>
+    </div>
+    <div class="r2">
+      <div class="cc"><div class="cc-head"><h3>By type</h3></div><div class="leg" id="lt"></div><div style="position:relative;height:200px"><canvas id="ct"></canvas></div></div>
+      <div class="cc"><div class="cc-head"><h3>By status</h3></div><div class="leg" id="ls"></div><div style="position:relative;height:200px"><canvas id="cs"></canvas></div></div>
+    </div>
+    <div class="cc"><div class="cc-head"><h3>Links built per month</h3></div><div class="leg" id="lm"></div><div style="position:relative;height:170px;margin-top:6px"><canvas id="cm"></canvas></div></div>
+  </div>
+
+  <!-- MONTHLY -->
+  <div id="mo" class="panel">
+    <p class="section-title">Month-by-month velocity</p>
+    <div class="mcg" id="mc"></div>
+    <div class="cc"><div class="cc-head"><h3>Built vs net gain</h3></div><div class="leg" id="ltr"></div><div style="position:relative;height:190px;margin-top:6px"><canvas id="ctr"></canvas></div></div>
+  </div>
+
+  <!-- RECOVERY -->
+  <div id="re" class="panel">
+    <p class="section-title" style="margin-bottom:14px">Assign recovery actions to lost links</p>
+    <div id="rl"></div>
+  </div>
+
+  <!-- DR HEALTH -->
+  <div id="he" class="panel">
+    <p class="section-title" style="margin-bottom:14px">DR strength across live links</p>
+    <div class="cc"><div id="hl"></div></div>
+  </div>
+
+  <!-- HOW TO USE -->
+  <div id="gu" class="panel">
+    <div class="info-box">
+      <b>About lost link detection —</b> Browsers cannot automatically ping URLs due to security restrictions (CORS). Instead, linkFlow flags links as <b>Check</b> after 30 days without a verify action. Click <b>Verify</b> on any row to open the page, then confirm it is live or mark it as lost.
+    </div>
+    <div class="guide-card">
+      <div class="gs">
+        <h4>What linkFlow does</h4>
+        <p>A complete backlink tracking system. Add every link you build, track its status, monitor DR health, and manage lost link recovery. Data saves in your browser and persists between sessions on the same device.</p>
+      </div>
+      <div class="gs">
+        <h4>Getting started</h4>
+        <div class="st"><div class="sn">1</div><div class="sv">Go to <b>Link tracker</b> and click <b>+ Add new link</b> every time a link goes live — or use <b>Import from Ahrefs / Semrush</b> to bulk-import from a CSV export.</div></div>
+        <div class="st"><div class="sn">2</div><div class="sv">Fill in domain, anchor text, link type, DR, status, and month — these fields power all charts and KPIs.</div></div>
+        <div class="st"><div class="sn">3</div><div class="sv"><b>Overview</b> auto-updates with KPI cards and charts the moment you save a link.</div></div>
+        <div class="st"><div class="sn">4</div><div class="sv">Links not verified in <b>30 days</b> are flagged as <b>Check</b> — a red alert bar appears at the top of the tracker.</div></div>
+        <div class="st"><div class="sn">5</div><div class="sv">Click <b>Verify</b> on any row → page opens → click <b>Still Live</b> or <b>Mark Lost</b> to update status and reset the 30-day clock.</div></div>
+        <div class="st"><div class="sn">6</div><div class="sv">Lost links flow into <b>Lost &amp; recovery</b> automatically — assign a re-outreach action immediately.</div></div>
+        <div class="st"><div class="sn">7</div><div class="sv">Use <b>Export CSV</b> (top right) to back up your data or share with a client.</div></div>
+      </div>
+    </div>
+    <div class="guide-card">
+      <div class="gs">
+        <h4>Field reference</h4>
+        <div class="gr"><div class="gk">Linking domain *</div><div class="gv">Root domain linking to you — e.g. ahrefs.com</div></div>
+        <div class="gr"><div class="gk">Anchor text *</div><div class="gv">The clickable text of your backlink</div></div>
+        <div class="gr"><div class="gk">Page with link</div><div class="gv">Full URL of the page where your link appears</div></div>
+        <div class="gr"><div class="gk">Your target URL</div><div class="gv">The page on your site being linked to</div></div>
+        <div class="gr"><div class="gk">Link type *</div><div class="gv">Guest Post / Resource Page / Broken Link / Niche Edit / Digital PR / Citation</div></div>
+        <div class="gr"><div class="gk">Status *</div><div class="gv">Live = active · Lost = removed · Check = needs manual verification</div></div>
+        <div class="gr"><div class="gk">Domain Rating</div><div class="gv">DR from Ahrefs or DA from Moz (0–100). Powers the DR health tab.</div></div>
+        <div class="gr"><div class="gk">Traffic estimate</div><div class="gv">Monthly organic traffic of the linking site — e.g. 150K or 2.1M</div></div>
+        <div class="gr"><div class="gk">Dofollow?</div><div class="gv">Yes = passes link equity · No = nofollow · TBD = not yet confirmed</div></div>
+        <div class="gr"><div class="gk">Month</div><div class="gv">Reporting month — groups links in the Monthly tab charts</div></div>
+        <div class="gr"><div class="gk">Last checked</div><div class="gv">Auto-updated when you click Verify. Links not checked in 30+ days are flagged.</div></div>
+      </div>
+    </div>
+    <div class="guide-card">
+      <div class="gs" style="margin-bottom:0">
+        <h4>Tips</h4>
+        <div class="gr"><div class="gk">Daily habit</div><div class="gv">Check the tracker every morning. Red alert bar = links that need verifying today.</div></div>
+        <div class="gr"><div class="gk">Verify workflow</div><div class="gv">Click Verify → page opens → check the link is still there → come back and click Still Live or Mark Lost.</div></div>
+        <div class="gr"><div class="gk">Lost links</div><div class="gv">Act within 48 hours. Go to Lost &amp; recovery and assign a re-outreach action immediately.</div></div>
+        <div class="gr"><div class="gk">Export</div><div class="gv">Use Export CSV anytime to back up your data or share with a client or manager.</div></div>
+        <div class="gr"><div class="gk">Data storage</div><div class="gv">Saved in your browser's localStorage. Persists between sessions on the same device and browser.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const SK='lld_v6',RK='lld_rec_v6';
+const TC={"Guest Post":"#3ecfcf","Resource Page":"#34d399","Niche Edit":"#a78bfa","Digital PR":"#f87171","Citation":"#fbbf24","Broken Link":"#6ee7b7"};
+const MOS=["Jan 2025","Feb 2025","Mar 2025","Apr 2025","May 2025","Jun 2025","Jul 2025","Aug 2025","Sep 2025","Oct 2025","Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026"];
+const RAS=["Re-outreach same site","Find replacement","Update & re-pitch","Contact editor","Broken link swap"];
+const CHECK_DAYS=30;
+let L=[],R={},C={},EID=null;
+
+function load(){try{L=JSON.parse(localStorage.getItem(SK))||[]}catch(e){L=[]}try{R=JSON.parse(localStorage.getItem(RK))||{}}catch(e){R={}}}
+function persist(){localStorage.setItem(SK,JSON.stringify(L));localStorage.setItem(RK,JSON.stringify(R))}
+function uid(){return 'x'+Date.now()+Math.random().toString(36).slice(2,4)}
+function today(){return new Date().toISOString().split('T')[0]}
+function daysSince(ds){if(!ds)return999;return Math.floor((Date.now()-new Date(ds).getTime())/(1000*60*60*24))}
+function dc(dr){if(!dr)return'#64748b';if(dr>=80)return'#34d399';if(dr>=60)return'#fbbf24';if(dr>=40)return'#3ecfcf';return'#f87171'}
+
+function autoFlag(){
+  let changed=false;
+  L.forEach(x=>{if(x.status==='Live'&&daysSince(x.lastChecked)>=CHECK_DAYS){x.status='Check';changed=true;}});
+  if(changed){persist()}
+}
+
+function sw(id,btn){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.getElementById(id).classList.add('on');btn.classList.add('on')}
+
+function oM(id){
+  EID=id||null;
+  document.getElementById('mt').textContent=id?'Edit link':'Add new link';
+  const f=id?L.find(x=>x.id===id):{};
+  document.getElementById('fd').value=f.domain||'';
+  document.getElementById('fa').value=f.anchor||'';
+  document.getElementById('fp').value=f.page||'';
+  document.getElementById('ftg').value=f.target||'';
+  document.getElementById('fty').value=f.type||'';
+  document.getElementById('fst').value=f.status||'';
+  document.getElementById('fdr').value=f.dr||'';
+  document.getElementById('ftr').value=f.traffic||'';
+  document.getElementById('fdf').value=f.dofollow||'';
+  document.getElementById('fdt').value=f.date||'';
+  document.getElementById('fmo').value=f.month||'';
+  document.getElementById('fld').value=f.lostDate||'';
+  document.getElementById('flr').value=f.lostReason||'';
+  document.getElementById('fn').value=f.notes||'';
+  tL();
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>document.getElementById('fd').focus(),60);
+}
+function cM(){document.getElementById('modal').classList.remove('open');EID=null}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)cM()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cM()});
+function tL(){const lost=document.getElementById('fst').value==='Lost';document.getElementById('lost-section').style.display=lost?'':'none';}
+
+function sL(){
+  const domain=document.getElementById('fd').value.trim();
+  const anchor=document.getElementById('fa').value.trim();
+  const type=document.getElementById('fty').value;
+  const status=document.getElementById('fst').value;
+  if(!domain||!anchor||!type||!status){toast('Please fill in required fields (*)');return}
+  const lnk={
+    id:EID||uid(),domain,anchor,
+    page:document.getElementById('fp').value.trim(),
+    target:document.getElementById('ftg').value.trim(),
+    type,status,
+    dr:parseInt(document.getElementById('fdr').value)||0,
+    traffic:document.getElementById('ftr').value.trim(),
+    dofollow:document.getElementById('fdf').value,
+    date:document.getElementById('fdt').value,
+    month:document.getElementById('fmo').value,
+    lostDate:document.getElementById('fld').value,
+    lostReason:document.getElementById('flr').value.trim(),
+    notes:document.getElementById('fn').value.trim(),
+    lastChecked:EID?(L.find(x=>x.id===EID)||{}).lastChecked||today():today()
+  };
+  if(EID){const i=L.findIndex(x=>x.id===EID);if(i>-1)L[i]=lnk}else L.push(lnk);
+  persist();cM();rf();toast(EID?'Link updated':'Link added');
+}
+
+function del(id){if(!confirm('Delete this link?'))return;L=L.filter(x=>x.id!==id);persist();rf();toast('Deleted')}
+
+function verify(id){
+  const lnk=L.find(x=>x.id===id);
+  if(!lnk)return;
+  const url=lnk.page||('https://'+lnk.domain);
+  window.open(url.startsWith('http')?url:'https://'+url,'_blank');
+  setTimeout(()=>{
+    const choice=confirm('Is the link still live on that page?\n\nOK = Still Live\nCancel = Mark as Lost');
+    if(choice){lnk.lastChecked=today();if(lnk.status==='Check')lnk.status='Live';toast('Marked as live');}
+    else{lnk.status='Lost';lnk.lostDate=today();lnk.lostReason=lnk.lostReason||'Detected via manual verify';toast('Marked as lost');}
+    persist();rf();
+  },1000);
+}
+
+function markAllChecked(){
+  const toCheck=L.filter(x=>x.status==='Check'||daysSince(x.lastChecked)>=CHECK_DAYS);
+  if(!toCheck.length)return;
+  toCheck.forEach(x=>{x.lastChecked=today();if(x.status==='Check')x.status='Live'});
+  persist();rf();toast(toCheck.length+' links marked as verified');
+}
+
+function toast(msg){const t=document.getElementById('tk');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
+
+function rf(){
+  autoFlag();
+  const lv=L.filter(x=>x.status==='Live'),lo=L.filter(x=>x.status==='Lost'),ck=L.filter(x=>x.status==='Check');
+  document.getElementById('bc').textContent=L.length+' link'+(L.length!==1?'s':'');
+  document.getElementById('k0').textContent=L.length;
+  document.getElementById('k1').textContent=lv.length;
+  document.getElementById('k2').textContent=lo.length;
+  document.getElementById('k3').textContent=ck.length;
+  document.getElementById('k4').textContent=L.length?Math.round(lv.length/L.length*100)+'%':'--';
+  const ld=lv.filter(x=>x.dr>0);
+  document.getElementById('k5').textContent=ld.length?Math.round(ld.reduce((s,x)=>s+x.dr,0)/ld.length):'--';
+  const aw=document.getElementById('alert-wrap');
+  const needCheck=L.filter(x=>x.status==='Check');
+  if(needCheck.length){aw.innerHTML=`<div class="alert-bar"><p>${needCheck.length} link${needCheck.length>1?'s':''} need verification — not checked in ${CHECK_DAYS}+ days</p><button onclick="markAllChecked()">Mark all verified</button></div>`;}
+  else{aw.innerHTML='';}
+  rC();rT();rMo();rRe();rHe();
+}
+
+function mkL(id,labels,colors){document.getElementById(id).innerHTML=labels.map((l,i)=>`<span class="li"><span class="ld" style="background:${colors[i]}"></span>${l}</span>`).join('')}
+
+function rC(){
+  Object.values(C).forEach(c=>{try{c.destroy()}catch(e){}});C={};
+  const gr='rgba(255,255,255,.06)',tk='#64748b';
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+  const tc={};L.forEach(x=>{if(x.type)tc[x.type]=(tc[x.type]||0)+1});
+  const tL2=Object.keys(tc),tV=tL2.map(k=>tc[k]),tC=tL2.map(k=>TC[k]||'#888');
+  mkL('lt',tL2.map((l,i)=>l+' ('+tV[i]+')'),tC);
+  if(tL2.length)C.t=new Chart(document.getElementById('ct'),{type:'doughnut',data:{labels:tL2,datasets:[{data:tV,backgroundColor:tC,borderWidth:3,borderColor:'#1a2130'}]},options:{...base,cutout:'65%'}});
+  const sv=[L.filter(x=>x.status==='Live').length,L.filter(x=>x.status==='Lost').length,L.filter(x=>x.status==='Check').length];
+  const sc=['#34d399','#f87171','#fbbf24'];
+  mkL('ls',['Live ('+sv[0]+')','Lost ('+sv[1]+')','Check ('+sv[2]+')'],sc);
+  if(L.length)C.s=new Chart(document.getElementById('cs'),{type:'doughnut',data:{labels:['Live','Lost','Check'],datasets:[{data:sv,backgroundColor:sc,borderWidth:3,borderColor:'#1a2130'}]},options:{...base,cutout:'65%'}});
+  const used=MOS.filter(m=>L.some(x=>x.month===m));
+  const mB=used.map(m=>L.filter(x=>x.month===m).length);
+  const mLo=used.map(m=>L.filter(x=>x.month===m&&x.status==='Lost').length);
+  mkL('lm',['Built','Lost'],['#3ecfcf','#f87171']);
+  if(used.length)C.m=new Chart(document.getElementById('cm'),{type:'bar',data:{labels:used.map(m=>m.split(' ')[0]),datasets:[{label:'Built',data:mB,backgroundColor:'#3ecfcf',borderRadius:5},{label:'Lost',data:mLo,backgroundColor:'#f87171',borderRadius:5}]},options:{...base,scales:{x:{grid:{color:gr},ticks:{color:tk,font:{size:11}}},y:{grid:{color:gr},ticks:{color:tk,font:{size:11},stepSize:1},beginAtZero:true}}}});
+  const mN=mB.map((b,i)=>b-mLo[i]);
+  mkL('ltr',['Built','Net gain'],['#3ecfcf','#34d399']);
+  if(used.length)C.tr=new Chart(document.getElementById('ctr'),{type:'line',data:{labels:used.map(m=>m.split(' ')[0]),datasets:[{label:'Built',data:mB,borderColor:'#3ecfcf',backgroundColor:'rgba(62,207,207,.06)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'#3ecfcf',pointBorderColor:'#1a2130',pointBorderWidth:2},{label:'Net',data:mN,borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.05)',tension:.4,fill:true,pointRadius:4,pointBackgroundColor:'#34d399',pointBorderColor:'#1a2130',pointBorderWidth:2}]},options:{...base,scales:{x:{grid:{color:gr},ticks:{color:tk,font:{size:11}}},y:{grid:{color:gr},ticks:{color:tk,font:{size:11},stepSize:1},beginAtZero:true}}}});
+}
+
+function rT(){
+  const fS=document.getElementById('fs').value,fT=document.getElementById('fty2').value,fD=document.getElementById('fdf2').value,fQ=document.getElementById('fq').value.toLowerCase();
+  const rows=L.filter(x=>(!fS||x.status===fS)&&(!fT||x.type===fT)&&(!fD||x.dofollow===fD)&&(!fQ||(x.domain||'').toLowerCase().includes(fQ)||(x.anchor||'').toLowerCase().includes(fQ)));
+  if(!rows.length){
+    document.getElementById('tb').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:3rem;color:#9ca3af;font-size:13px">
+    ${L.length?'No links match your filters.':'No links yet — click + Add new link to get started.'}</td></tr>`;return;
+  }
+  const tco=x=>TC[x]||'#888';
+  document.getElementById('tb').innerHTML=rows.map(x=>{
+    const bc=x.status==='Live'?'lv':x.status==='Lost'?'ls':'ck';
+    const dr=x.dr||0,dco=dc(dr),fw=dr?Math.round(dr/100*48):0;
+    const df=x.dofollow==='Yes'?'<span style="color:#34d399;font-weight:600;font-size:11px">Yes</span>':x.dofollow==='No'?'<span style="color:#64748b;font-size:11px">No</span>':'<span style="color:#64748b;font-size:11px">--</span>';
+    const days=daysSince(x.lastChecked);
+    const checkedDisplay=x.lastChecked?`<span style="color:#94a3b8">${x.lastChecked}</span><span class="overdue-tag">${days>=CHECK_DAYS?'overdue':days+'d ago'}</span>`:'<span style="color:#9ca3af">never</span>';
+    const isOverdue=x.status==='Check'||days>=CHECK_DAYS;
+    return`<tr class="${isOverdue?'overdue':''}">
+      <td><span style="font-weight:600;color:#f1f5f9;font-size:13px">${x.domain}</span>${x.notes?`<br><span style="font-size:11px;color:#9ca3af">${x.notes}</span>`:''}</td>
+      <td style="color:#6b7280;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${x.anchor}">${x.anchor||'--'}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${tco(x.type)};flex-shrink:0"></span><span style="color:#cbd5e1;font-weight:500">${x.type}</span></span></td>
+      <td><span style="display:flex;align-items:center;gap:7px"><span style="font-weight:700;color:${dco};min-width:22px;font-size:13px">${dr||'--'}</span>${dr?`<div style="width:48px;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden"><div style="width:${fw}px;height:100%;border-radius:3px;background:${dco}"></div></div>`:''}</span></td>
+      <td>${df}</td>
+      <td style="font-size:11px">${checkedDisplay}</td>
+      <td><span class="sb ${bc}">${x.status}</span></td>
+      <td><span style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="tbtn vf" onclick="verify('${x.id}')">Verify</button>
+        <button class="tbtn" onclick="oM('${x.id}')">Edit</button>
+        <button class="tbtn dl" onclick="del('${x.id}')">Delete</button>
+      </span></td>
+    </tr>`;
+  }).join('');
+}
+
+function rMo(){
+  const used=MOS.filter(m=>L.some(x=>x.month===m));
+  if(!used.length){document.getElementById('mc').innerHTML='<p style="font-size:12px;color:#64748b">No links with months assigned yet.</p>';return}
+  const b=used.map(m=>L.filter(x=>x.month===m).length);
+  const lo=used.map(m=>L.filter(x=>x.month===m&&x.status==='Lost').length);
+  const n=b.map((v,i)=>v-lo[i]);
+  document.getElementById('mc').innerHTML=used.map((m,i)=>`<div class="mc"><div class="ml">${m.split(' ')[0]}</div><div class="mv">${b[i]}</div><div class="mn" style="color:${n[i]>0?'#34d399':n[i]<0?'#f87171':'#64748b'}">${n[i]>0?'+':''}${n[i]} net</div></div>`).join('');
+}
+
+function rRe(){
+  const lost=L.filter(x=>x.status==='Lost');
+  if(!lost.length){document.getElementById('rl').innerHTML=`<div class="es"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><p>No lost links yet — great work!</p></div>`;return}
+  document.getElementById('rl').innerHTML=lost.map(x=>{
+    const sel=R[x.id]||null;
+    const btns=RAS.map(a=>`<button class="ra${sel===a?' sl':''}" onclick="setR('${x.id}','${a}')">${a}</button>`).join('');
+    return`<div class="rc"><div class="rc-d">${x.domain}</div><div class="rc-m">Anchor: "<em>${x.anchor||'--'}</em>" &middot; DR ${x.dr||'--'} &middot; ${x.type||'--'}<br>Lost: ${x.lostDate||'unknown'} &middot; Reason: <strong style="color:#fbbf24">${x.lostReason||'unknown'}</strong></div><div class="ras">${btns}</div><div class="rs${sel?' dn':''}">${sel?'Action assigned: '+sel:'No action assigned yet'}</div></div>`;
+  }).join('');
+}
+function setR(id,a){R[id]=R[id]===a?null:a;persist();rRe()}
+
+function rHe(){
+  const lv=L.filter(x=>x.status==='Live'&&x.dr>0).sort((a,b)=>b.dr-a.dr);
+  if(!lv.length){document.getElementById('hl').innerHTML='<p style="font-size:12px;color:#64748b;padding:.5rem 0">Add live links with DR values to see health.</p>';return}
+  document.getElementById('hl').innerHTML=lv.map(x=>{
+    const dco=dc(x.dr),fw=Math.round(x.dr/100*100);
+    const lbl=x.dr>=80?'Strong':x.dr>=60?'Good':x.dr>=40?'Average':'Weak';
+    return`<div class="hr"><div class="hd">${x.domain}</div><div class="ht"><div class="hf" style="width:${fw}%;background:${dco}"></div></div><div class="hv" style="color:${dco}">${x.dr}</div><div class="hl">${lbl}</div></div>`;
+  }).join('');
+}
+
+function exportCSV(){
+  if(!L.length){toast('No links to export');return}
+  const headers=['Domain','Anchor Text','Page URL','Target URL','Type','Status','DR','Traffic','Dofollow','Date Live','Month','Last Checked','Lost Date','Lost Reason','Notes'];
+  const rows=L.map(x=>[x.domain,x.anchor,x.page,x.target,x.type,x.status,x.dr,x.traffic,x.dofollow,x.date,x.month,x.lastChecked,x.lostDate,x.lostReason,x.notes].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='backlink-tracker-'+today()+'.csv';
+  a.click();toast('CSV exported');
+}
+
+function toggleImp(tool){
+  ['ah','se'].forEach(p=>{const el=document.getElementById('imp-'+p);if(p===tool)el.classList.toggle('open');else el.classList.remove('open');});
+}
+function dragOver(e,id){e.preventDefault();document.getElementById(id).classList.add('drag')}
+function dragLeave(id){document.getElementById(id).classList.remove('drag')}
+function dropFile(e,tool){e.preventDefault();dragLeave('drop-'+tool);const f=e.dataTransfer.files[0];if(f)parseCSV(f,tool)}
+function readFile(input,tool){if(input.files[0])parseCSV(input.files[0],tool)}
+
+function parseCSV(file,tool){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const text=e.target.result;
+      const lines=text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length<2){showRes(tool,'File appears empty — check the export','er');return}
+      const headers=parseCSVLine(lines[0]).map(h=>h.toLowerCase().trim().replace(/[^a-z0-9]/g,'_'));
+      const rows=lines.slice(1).filter(l=>l.trim());
+      let imported=0,skipped=0;
+      rows.forEach(row=>{
+        const cols=parseCSVLine(row);
+        const obj={};headers.forEach((h,i)=>{obj[h]=cols[i]||''});
+        const lnk=tool==='ah'?mapAhrefs(obj):mapSemrush(obj);
+        if(!lnk){skipped++;return}
+        const exists=L.find(x=>x.domain===lnk.domain&&x.anchor===lnk.anchor&&x.page===lnk.page);
+        if(exists){skipped++;return}
+        L.push(lnk);imported++;
+      });
+      persist();rf();
+      if(imported>0)showRes(tool,imported+' link'+(imported!==1?'s':'')+' imported'+(skipped?' ('+skipped+' skipped)':''),'ok');
+      else showRes(tool,'No new links imported — '+skipped+' rows skipped (duplicates or unrecognised format)','er');
+    }catch(err){showRes(tool,'Could not parse file: '+err.message,'er')}
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVLine(line){
+  const result=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++}else inQ=!inQ}
+    else if(ch===','&&!inQ){result.push(cur.trim());cur=''}
+    else cur+=ch;
+  }
+  result.push(cur.trim());return result;
+}
+
+function mapAhrefs(obj){
+  const domain=extractDomain(obj['referring_page_url']||obj['url_from']||obj['source_url']||obj['referring_page']||'');
+  const anchor=(obj['anchor']||obj['anchor_text']||'').replace(/^"|"$/g,'');
+  const page=(obj['referring_page_url']||obj['url_from']||obj['source_url']||'').replace(/^"|"$/g,'');
+  const target=(obj['url_to']||obj['target_url']||obj['destination_url']||'').replace(/^"|"$/g,'');
+  const dr=parseInt(obj['domain_rating']||obj['dr']||obj['domain_rating_source']||0)||0;
+  const dofollow=(obj['dofollow']||obj['link_type']||'').toLowerCase().includes('dofollow')?'Yes':(obj['nofollow']||'').toLowerCase()==='true'?'No':'TBD';
+  if(!domain||!anchor)return null;
+  return{id:uid(),domain,anchor,page,target,type:'',status:'Live',dr,traffic:'',dofollow,date:'',month:'',lostDate:'',lostReason:'',notes:'Imported from Ahrefs',lastChecked:today()};
+}
+
+function mapSemrush(obj){
+  const domain=extractDomain(obj['source_url']||obj['page_url']||obj['referring_page_url']||obj['url_from']||'');
+  const anchor=(obj['anchor']||obj['anchor_text']||'').replace(/^"|"$/g,'');
+  const page=(obj['source_url']||obj['page_url']||obj['url_from']||'').replace(/^"|"$/g,'');
+  const target=(obj['target_url']||obj['url_to']||obj['destination_url']||'').replace(/^"|"$/g,'');
+  const dr=parseInt(obj['authority_score']||obj['page_authority']||obj['domain_score']||0)||0;
+  const followVal=(obj['follow']||obj['link_type']||obj['nofollow']||'').toLowerCase();
+  const dofollow=followVal==='true'||followVal==='dofollow'?'Yes':followVal==='false'||followVal==='nofollow'?'No':'TBD';
+  if(!domain||!anchor)return null;
+  return{id:uid(),domain,anchor,page,target,type:'',status:'Live',dr,traffic:'',dofollow,date:'',month:'',lostDate:'',lostReason:'',notes:'Imported from Semrush',lastChecked:today()};
+}
+
+function extractDomain(url){
+  try{const u=url.trim().replace(/^"|"$/g,'');if(!u)return'';const parsed=new URL(u.startsWith('http')?u:'https://'+u);return parsed.hostname.replace(/^www\./,'');}
+  catch(e){const m=url.match(/(?:https?:\/\/)?(?:www\.)?([^/\s"]+)/);return m?m[1].replace(/^www\./,''):'';}
+}
+
+function showRes(tool,msg,type){const el=document.getElementById('res-'+tool);el.textContent=msg;el.className='imp-result '+type;}
+
+load();rf();
+</script>
+</body>
+</html>
