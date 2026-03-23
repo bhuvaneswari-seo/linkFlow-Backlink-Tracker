@@ -1,4 +1,4 @@
-![linkFlow Dashboard](./image_67f248.png)
+![linkFlow Dashboard](./dashboard.png)
 
 **linkFlow — The Strategist’s Backlink Tracker**
 linkFlow is a custom dashboard I designed to solve a major pain point in technical SEO: Backlink Data Fragmentation. Instead of managing messy, static spreadsheets, I built this interface to provide a real-time visual pulse on link-building health, net growth, and "link rot.
