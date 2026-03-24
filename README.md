@@ -1,6 +1,6 @@
 ![linkFlow Dashboard](./dashboard.png)
 
-**linkFlow — The Strategist’s Backlink Tracker**
+**linkFlow - Track backlinks. Measure impact. Stay in control**
 linkFlow is a custom dashboard I designed to solve a major pain point in technical SEO: Backlink Data Fragmentation. Instead of managing messy, static spreadsheets, I built this interface to provide a real-time visual pulse on link-building health, net growth, and "link rot.
 
 **🔗[LinkFlow - Backlink Tracker](https://bhuvaneswari-seo.github.io/linkFlow-Backlink-Tracker/) - Why I Designed This**
@@ -29,13 +29,22 @@ I am an SEO strategist, not a full-stack developer. This project demonstrates my
 
 I defined the logic, data mapping rules, and user experience, using AI as my technical assistant to execute the code. This reflects my approach to modern marketing: using every tool available to drive efficiency.
 
+**Usage**
+
+Download index.html
+Open it in any browser
+Click + Add new link and start tracking
+
 **How to Use ✅**
 
-**Upload:** Drag your Ahrefs or Semrush CSV file into the dashboard.
+1. Import your Ahrefs or Semrush CSV — or add links manually
+2. Click Verify on any link to confirm it's still live
+3. Export CSV anytime to share with clients or managers
 
-**Analyze:** Review the top-level "Health Cards" for current campaign performance.
+Or host it free on GitHub Pages — push index.html to a public repo, go to Settings → Pages, set source to main branch.
 
-**Filter:** Use the sidebar to drill down into specific months or link types.
+**Stack**
 
-**Save:** Export your progress or rely on the browser's auto-save feature.
+Single HTML file — Chart.js, Inter font, browser localStorage. Zero dependencies, zero build step.
 
+Part of a link building specialist portfolio — built to demonstrate systematic, data-driven campaign management.
