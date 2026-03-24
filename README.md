@@ -1,50 +1,45 @@
+
+🔗 **[Live Demo](https://bhuvaneswari-seo.github.io/linkFlow-Backlink-Tracker/)**
+
+linkFlow is a custom dashboard I designed to solve a real pain point in link building: **backlink data fragmentation**. Instead of managing messy static spreadsheets, this gives you a live visual pulse on link health, net growth, and link rot - all in one place.
+
 ![linkFlow Dashboard](./dashboard.png)
 
-**linkFlow - Track backlinks. Measure impact. Stay in control**
-linkFlow is a custom dashboard I designed to solve a major pain point in technical SEO: Backlink Data Fragmentation. Instead of managing messy, static spreadsheets, I built this interface to provide a real-time visual pulse on link-building health, net growth, and "link rot.
+---
 
-**🔗[LinkFlow - Backlink Tracker](https://bhuvaneswari-seo.github.io/linkFlow-Backlink-Tracker/) - Why I Designed This**
+## Why I Built This 
 
-As a specialist focusing on SEO and growth, I realized that standard "Lost Link" reports from major tools can be difficult to action quickly. I designed linkFlow with a specific workflow to prioritize strategy:
+Standard "lost link" reports from tools like Ahrefs and Semrush are great at surfacing data, but slow to action. I designed linkFlow around a specific workflow:
 
-**Net Gain Monitoring:** Track actual growth by subtracting "Lost" links from "Live" acquisitions in real-time.
+- **Net gain monitoring** - tracks actual growth by subtracting lost links from live acquisitions in real time
+- **DR distribution** - instant visualisation of your domain rating profile to ensure outreach is hitting high-authority targets
+- **Link rot prevention** - automated logic flags links that haven't been verified recently before they become a problem
 
-**Quality Control (DR Distribution)**: Instant visualization of the Domain Rating (DR) profile to ensure outreach efforts are hitting high-authority targets.
+---
 
-**Actionable Maintenance:** Automated logic that flags links that haven't been verified recently, preventing "link rot" from going unnoticed.
+## Key Features
 
-**🔐Key Features for SEO Managers**
+- **Smart CSV import** - recognises and maps Ahrefs and Semrush exports automatically, no column reformatting needed
+- **Dynamic charts** - link velocity, authority distribution, and monthly trend via Chart.js
+- **Verify workflow** - one click opens the page so you can confirm a link is still live or mark it lost
+- **Lost & recovery** - assign re-outreach actions to every lost link
+- **Privacy-first** - all data processed locally via localStorage, client data never leaves the browser
+- **Export CSV** - download your full link database anytime
 
-**Smart CSV Mapping:** Automatically recognizes and imports data exports from Ahrefs and Semrush. No manual column re-formatting required.
+---
 
-**Dynamic Visualizations:** Integrated charts for Link Velocity and Authority Distribution using Chart.js.
+## How to Use
 
-**Privacy-Centric:** All data is processed locally in the browser via localStorage. Client link data is never sent to an external server.
+1. Import your Ahrefs or Semrush CSV - or add links manually with **+ Add new link**
+2. Click **Verify** on any row to confirm a link is still live and reset the 30-day check clock
+3. Export CSV anytime to back up your data or share with a client
 
-**Workflow Filters:** Quickly isolate links by Month, Status (Live/Lost), or Authority tier.
+---
 
-**🛠️The Build Process**
+## Build Notes
 
-I am an SEO strategist, not a full-stack developer. This project demonstrates my ability to leverage AI-assisted development (Claude) to transform complex marketing requirements into functional technical solutions.
+This project was built using AI-assisted development. I defined the strategy, logic, data mapping rules, and user experience — and used Claude as the technical execution layer. It reflects how I work: using every tool available to ship faster and smarter.
 
-I defined the logic, data mapping rules, and user experience, using AI as my technical assistant to execute the code. This reflects my approach to modern marketing: using every tool available to drive efficiency.
+---
 
-**Usage**
-
-Download index.html
-Open it in any browser
-Click + Add new link and start tracking
-
-**How to Use ✅**
-
-1. Import your Ahrefs or Semrush CSV — or add links manually
-2. Click Verify on any link to confirm it's still live
-3. Export CSV anytime to share with clients or managers
-
-Or host it free on GitHub Pages — push index.html to a public repo, go to Settings → Pages, set source to main branch.
-
-**Stack**
-
-Single HTML file — Chart.js, Inter font, browser localStorage. Zero dependencies, zero build step.
-
-Part of a link building specialist portfolio — built to demonstrate systematic, data-driven campaign management.
+*Part of a link building specialist portfolio — built to demonstrate systematic, data-driven campaign management.*
